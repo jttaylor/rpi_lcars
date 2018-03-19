@@ -1,5 +1,7 @@
 # RaspberryPi LCARS Interface
 
+This is a fork of Toby Kurien's Project which I customized to control a Kasa TP-Link Smart Plug.  Other than that Toby's code is unchanged.  Thanks Toby!
+
 Star Trek [LCARS](https://en.wikipedia.org/wiki/LCARS) interface for [Raspberry Pi](https://raspberrypi.org/) using [Pygame](http://www.pygame.org). 
 
 The code is an example of implementing a custom MovieOS-style interface for your RaspberryPi projects that include the RaspberryPi touch screen (e.g. home automation control panel). The LCARS assets can be replaced with assets from any other style of user interface (e.g. from games, cartoons, or TV series).
