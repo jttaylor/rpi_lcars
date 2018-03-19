@@ -1,6 +1,8 @@
 from datetime import datetime
 import pygame
 from pygame.mixer import Sound
+import os
+import TPLink
 
 from ui import colours
 from ui.widgets.background import LcarsBackgroundImage, LcarsImage
@@ -11,7 +13,17 @@ from ui.widgets.sprite import LcarsMoveToMouse
 
 class ScreenMain(LcarsScreen):
     def setup(self, all_sprites):
-        all_sprites.add(LcarsBackgroundImage("assets/lcars_screen_1b.png"),
+	self.smartplug = TPLink.SmartPlug("username", "password")
+	self.smartplug_id = "your_device_id"
+		
+	self.shutdown_cnt = 0
+	self.lights_on = False
+	if (self.smartplug.GetState(self.smartplug_id) == 0):
+		self.lights_on = False
+	else:
+		self.lights_on = True
+        
+	all_sprites.add(LcarsBackgroundImage("assets/lcars_screen_1b.png"),
                         layer=0)
         
         # panel text
@@ -19,7 +31,7 @@ class ScreenMain(LcarsScreen):
                         layer=1)
         all_sprites.add(LcarsText(colours.ORANGE, (0, 135), "HOME AUTOMATION", 2),
                         layer=1)
-        all_sprites.add(LcarsBlockMedium(colours.RED_BROWN, (145, 16), "LIGHTS"),
+        all_sprites.add(LcarsBlockMedium(colours.RED_BROWN, (145, 16), ""),
                         layer=1)
         all_sprites.add(LcarsBlockSmall(colours.ORANGE, (211, 16), "CAMERAS"),
                         layer=1)
@@ -53,6 +65,10 @@ class ScreenMain(LcarsScreen):
                         layer=4)
         all_sprites.add(LcarsButton(colours.PEACH, (107, 398), "WEATHER", self.weatherHandler),
                         layer=4)
+        all_sprites.add(LcarsButton(colours.BEIGE, (107, 533), "LIGHTS", self.lightsHandler),
+                        layer=4)
+        all_sprites.add(LcarsButton(colours.RED_BROWN, (107, 668), "SHUTDOWN", self.shutdownHandler),
+                        layer=4)
 
         # gadgets        
         all_sprites.add(LcarsGifImage("assets/gadgets/fwscan.gif", (277, 556), 100), layer=1)
@@ -68,6 +84,14 @@ class ScreenMain(LcarsScreen):
         self.weather = LcarsImage("assets/weather.jpg", (188, 122))
         self.weather.visible = False
         all_sprites.add(self.weather, layer=2) 
+
+        self.redalert = LcarsGifImage("assets/red_alert.gif", (258, 232), 100)
+        self.redalert.visible = False
+        all_sprites.add(self.redalert, layer=2) 
+
+        self.greenalert = LcarsGifImage("assets/green_alert.gif", (258, 262), 100)
+        self.greenalert.visible = False
+        all_sprites.add(self.greenalert, layer=2) 
 
         #all_sprites.add(LcarsMoveToMouse(colours.WHITE), layer=1)
         self.beep1 = Sound("assets/audio/panel/201.wav")
@@ -91,26 +115,54 @@ class ScreenMain(LcarsScreen):
             for sprite in self.info_text:
                 sprite.visible = False
 
+    def hideAllGadgets(self):
+        self.sensor_gadget.visible = False
+        self.dashboard.visible = False
+        self.weather.visible = False
+	self.greenalert.visible = False
+	self.redalert.visible = False
+
     def gaugesHandler(self, item, event, clock):
         self.hideInfoText()
+	self.hideAllGadgets()
         self.sensor_gadget.visible = False
         self.dashboard.visible = True
         self.weather.visible = False
 
     def sensorsHandler(self, item, event, clock):
         self.hideInfoText()
+	self.hideAllGadgets()
         self.sensor_gadget.visible = True
         self.dashboard.visible = False
         self.weather.visible = False
     
     def weatherHandler(self, item, event, clock):
         self.hideInfoText()
+	self.hideAllGadgets()
         self.sensor_gadget.visible = False
         self.dashboard.visible = False
         self.weather.visible = True
     
+    def lightsHandler(self, item, event, clock):
+        self.hideInfoText()
+	self.hideAllGadgets()
+	if (self.lights_on):
+		self.redalert.visible = True
+		self.smartplug.TurnOff(self.smartplug_id)
+	else:
+		self.greenalert.visible = True
+		self.smartplug.TurnOn(self.smartplug_id)
+	self.lights_on = not self.lights_on
+
+    def shutdownHandler(self, item, event, clock):
+        #self.hideInfoText()
+	self.shutdown_cnt += 1
+	if (self.shutdown_cnt >= 3):
+		os.system("sudo shutdown now -h")
+
     def logoutHandler(self, item, event, clock):
         from screens.authorize import ScreenAuthorize
         self.loadScreen(ScreenAuthorize())
     
     
+
